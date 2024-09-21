@@ -21,12 +21,14 @@ public class UrlResource {
     @Path("/{hash}")
     @Produces(MediaType.TEXT_PLAIN)
     public Uni<Response> get(final String hash) {
-        return urlService.getUrl(hash).onItem().transform(UrlResource::redirectResponse);
+        return urlService.getUrl(hash)
+                .onItem().transform(URI::create)
+                .onItem().transform(UrlResource::redirectResponse);
     }
 
-    private static Response redirectResponse(final String url) {
+    private static Response redirectResponse(final URI uri) {
         return Response.status(Response.Status.MOVED_PERMANENTLY)
-                .location(URI.create(url))
+                .location(uri)
                 .build();
     }
 }
