@@ -11,7 +11,7 @@ import org.jboss.logging.Logger;
 import org.nunofaria11.controller.models.ShortUrlRequest;
 import org.nunofaria11.controller.models.ShortUrlResponse;
 import org.nunofaria11.entities.ShortUrl;
-import org.nunofaria11.service.UrlService;
+import org.nunofaria11.service.UrlShortenerService;
 
 import java.net.URI;
 
@@ -21,7 +21,7 @@ public class UrlResource {
     private static final Logger LOGGER = Logger.getLogger(UrlResource.class);
 
     @Inject
-    UrlService urlService;
+    UrlShortenerService urlShortenerService;
 
     @ConfigProperty(name = "url-shortener.redirect-host")
     URI redirectHost;
@@ -30,7 +30,7 @@ public class UrlResource {
     @Path("/{hash}")
     public Uni<Response> get(final String hash) {
         LOGGER.debugf("Received request for hash %s", hash);
-        return urlService.getUrl(hash)
+        return urlShortenerService.getUrl(hash)
                 .onItem()
                 .transform(url -> {
                     if (url == null) {
@@ -53,7 +53,7 @@ public class UrlResource {
     @Path("/info/{hash}")
     public Uni<Response> info(final String hash) {
         LOGGER.debugf("Received request for hash %s", hash);
-        return urlService.getUrl(hash)
+        return urlShortenerService.getUrl(hash)
                 .onItem()
                 .transform(url -> {
                     if (url == null) {
@@ -75,7 +75,7 @@ public class UrlResource {
     @POST
     public Uni<Response> post(final ShortUrlRequest request) {
         LOGGER.debugf("Received request to shorten URL %s", request.url());
-        return urlService.saveUrl(request.url())
+        return urlShortenerService.saveUrl(request.url())
                 .onItem().transform(this::toShortUrlResponse)
                 .onItem().transform(UrlResource::successResponse)
                 .onFailure()
