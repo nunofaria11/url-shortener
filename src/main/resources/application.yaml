@@ -1,0 +1,7 @@
+url-shortener:
+  redirect-host: http://localhost:8080
+
+quarkus:
+  mongodb:
+    connection-string: mongodb://root:example@localhost:27017
+    database: url-shortener

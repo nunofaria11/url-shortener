@@ -1,6 +1,6 @@
 package org.nunofaria11.controller.models;
 
-import java.net.URI;
+import java.net.URL;
 
-public record ShortUrlRequest(URI url) {
+public record ShortUrlRequest(URL url) {
 }

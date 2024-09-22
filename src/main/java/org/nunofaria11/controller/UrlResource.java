@@ -10,10 +10,13 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.nunofaria11.controller.models.ShortUrlRequest;
 import org.nunofaria11.controller.models.ShortUrlResponse;
-import org.nunofaria11.entities.ShortUrl;
+import org.nunofaria11.models.ShortUrl;
 import org.nunofaria11.service.UrlShortenerService;
 
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 @Path("")
 public class UrlResource {
@@ -30,16 +33,16 @@ public class UrlResource {
     @Path("/{hash}")
     public Uni<Response> get(final String hash) {
         LOGGER.debugf("Received request for hash %s", hash);
-        return urlShortenerService.getUrl(hash)
+        return urlShortenerService.visit(hash)
                 .onItem()
                 .transform(url -> {
                     if (url == null) {
-                        LOGGER.warnf("URL not found for hash: %s", hash);
+                        LOGGER.debugf("URL not found for hash: %s", hash);
                         return notFoundResponse();
                     }
 
                     LOGGER.debugf("URL found for hash: %s", hash);
-                    return redirectResponse(toShortUrlResponse(url));
+                    return redirectResponse(url.url());
 
                 })
                 .onFailure()
@@ -53,11 +56,11 @@ public class UrlResource {
     @Path("/info/{hash}")
     public Uni<Response> info(final String hash) {
         LOGGER.debugf("Received request for hash %s", hash);
-        return urlShortenerService.getUrl(hash)
+        return urlShortenerService.get(hash)
                 .onItem()
                 .transform(url -> {
                     if (url == null) {
-                        LOGGER.warnf("URL not found for hash: %s", hash);
+                        LOGGER.debugf("URL not found for hash: %s", hash);
                         return notFoundResponse();
                     }
 
@@ -75,7 +78,7 @@ public class UrlResource {
     @POST
     public Uni<Response> post(final ShortUrlRequest request) {
         LOGGER.debugf("Received request to shorten URL %s", request.url());
-        return urlShortenerService.saveUrl(request.url())
+        return urlShortenerService.save(request.url())
                 .onItem().transform(this::toShortUrlResponse)
                 .onItem().transform(UrlResource::successResponse)
                 .onFailure()
@@ -88,18 +91,26 @@ public class UrlResource {
     // Private methods
 
     private ShortUrlResponse toShortUrlResponse(final ShortUrl url) {
-        var shortUrl = URI.create(redirectHost.toString() + "/" + url.hash());
-        return new ShortUrlResponse(url.url(), shortUrl);
+        try {
+            final URL shortUrl = URI.create(redirectHost.toString() + "/" + url.hash()).toURL();
+            return new ShortUrlResponse(url.url(), shortUrl, url.creationDate(), url.visits());
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static Response successResponse(final ShortUrlResponse url) {
         return Response.ok(url).build();
     }
 
-    private static Response redirectResponse(final ShortUrlResponse url) {
-        return Response.status(Response.Status.MOVED_PERMANENTLY)
-                .location(url.url())
-                .build();
+    private static Response redirectResponse(final URL url) {
+        try {
+            return Response.status(Response.Status.MOVED_PERMANENTLY)
+                    .location(url.toURI())
+                    .build();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static Response notFoundResponse() {
