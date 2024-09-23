@@ -1,5 +1,6 @@
 url-shortener:
   redirect-host: https://url-shortener.nunofaria11.org
+  hash-length: 6
 
 quarkus:
   mongodb:

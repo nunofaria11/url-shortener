@@ -1,5 +1,6 @@
 url-shortener:
   redirect-host: http://localhost:8080
+  hash-length: 10
 
 quarkus:
   mongodb:
