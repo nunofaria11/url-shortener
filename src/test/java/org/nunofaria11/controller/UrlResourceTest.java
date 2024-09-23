@@ -19,7 +19,7 @@ public class UrlResourceTest {
     @Test
     @Order(1)
     void testPost() {
-        ValidatableResponse response = given()
+        given()
                 .when()
                 .contentType("application/json")
                 .body("""
@@ -29,8 +29,8 @@ public class UrlResourceTest {
                         """)
                 .post("/")
                 .then()
-                .statusCode(200)
-                .body("shortUrl", Matchers.matchesPattern("https://url-shortener.nunofaria11.org/[a-z0-9]{6}"));
+                .statusCode(201)
+                .header("Location", Matchers.matchesPattern("https://url-shortener.nunofaria11.org/[a-z0-9]{6}"));
 
     }
 
@@ -50,7 +50,7 @@ public class UrlResourceTest {
                             }
                             """)
                     .post("/");
-            String shortUrl = post.body().jsonPath().getString("shortUrl");
+            String shortUrl = post.header("Location");
             hash = shortUrl.substring(shortUrl.lastIndexOf("/") + 1);
         }
 

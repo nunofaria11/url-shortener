@@ -80,7 +80,7 @@ public class UrlResource {
         LOGGER.debugf("Received request to shorten URL %s", request.url());
         return urlShortenerService.shorten(request.url())
                 .onItem().transform(this::toShortUrlResponse)
-                .onItem().transform(UrlResource::successResponse)
+                .onItem().transform(UrlResource::createdResponse)
                 .onFailure()
                 .recoverWithItem(throwable -> {
                     LOGGER.errorf("Error occurred while shortening URL %s, error: %s", request.url(), throwable.getMessage());
@@ -101,6 +101,14 @@ public class UrlResource {
 
     private static Response successResponse(final ShortUrlResponse url) {
         return Response.ok(url).build();
+    }
+
+    private static Response createdResponse(final ShortUrlResponse url) {
+        try {
+            return Response.created(url.shortUrl().toURI()).build();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static Response redirectResponse(final URL url) {
