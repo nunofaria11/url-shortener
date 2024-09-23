@@ -78,7 +78,7 @@ public class UrlResource {
     @POST
     public Uni<Response> post(final ShortUrlRequest request) {
         LOGGER.debugf("Received request to shorten URL %s", request.url());
-        return urlShortenerService.save(request.url())
+        return urlShortenerService.shorten(request.url())
                 .onItem().transform(this::toShortUrlResponse)
                 .onItem().transform(UrlResource::successResponse)
                 .onFailure()
