@@ -1,0 +1,7 @@
+url-shortener:
+  redirect-host: https://url-shortener.nunofaria11.org
+
+quarkus:
+  mongodb:
+    connection-string: mongodb://localhost:27017
+    database: url-shortener
